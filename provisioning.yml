@@ -82,3 +82,20 @@
     - name: Install openjpeg
       shell: env DESTDIR={{base}} make install chdir={{ build }}/openjpeg-version.2.1 creates={{base}}/lib/libopenjp2.so
       environment: local_env
+
+    - name: Get libtiff
+      get_url:
+        dest: "{{ build }}/tiff-4.0.4.tar.gz"
+        url: ftp://ftp.remotesensing.org/pub/libtiff/tiff-4.0.4.tar.gz
+    - name: Unpack libtiff
+      command: tar -zxf {{ build }}/tiff-4.0.4.tar.gz chdir={{ build }} creates={{ build }}/tiff-4.0.4
+      environment: local_env
+    - name: Configure libtiff
+      command: ./configure --prefix={{ base }} chdir={{ build }}/tiff-4.0.4 creates={{ build }}/tiff-4.0.4/config.status
+      environment: local_env
+    - name: Make libtiff
+      command: make chdir={{ build }}/tiff-4.0.4
+      environment: local_env
+    - name: Install libtiff
+      shell: make install chdir={{ build }}/tiff-4.0.4
+      environment: local_env
