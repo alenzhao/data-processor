@@ -9,9 +9,22 @@
 - hosts: all
   sudo: True
   vars:
-    base: /usr/local
-    build: /tmp
+    base: /home/vagrant/local
+    build: /home/vagrant/scratch
+    local_env:
+      PATH: "/home/vagrant/local/bin:{{ansible_env.PATH}}"
   tasks:
+
+    ## Directories
+    - name: Make directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0755
+      with_items:
+        - "{{ base }}"
+        - "{{ build }}"
+        - "{{ base }}/man/man1"
 
     ## C and its friends
     - name: Install required packages
@@ -25,24 +38,47 @@
         url: http://www.cmake.org/files/v3.3/cmake-3.3.1.tar.gz
     - name: Unpack cmake
       command: tar -zxf {{ build }}/cmake-3.3.1.tar.gz chdir={{ build }} creates={{ build }}/cmake-3.3.1
+      environment: local_env
     - name: Configure cmake
       command: ./configure --prefix={{ base }} chdir={{ build }}/cmake-3.3.1 creates={{ build }}/cmake-3.3.1/CPackConfig.cmake
+      environment: local_env
     - name: make cmake
       command: make chdir={{ build }}/cmake-3.3.1 creates={{ build }}/cmake-3.3.1/bin/cmake
+      environment: local_env
     - name: Install cmake
       command: make install chdir={{ build }}/cmake-3.3.1 creates={{ base }}/bin/cmake
+      environment: local_env
 
     - name: Get libjpeg
       get_url:
         dest: "{{ build }}/jpegsrc.v6b.tar.gz"
         url: http://sourceforge.net/projects/libjpeg/files/libjpeg/6b/jpegsrc.v6b.tar.gz/download
     - name: Unpack libjpeg
-      command: tar -zxf /tmp/jpegsrc.v6b.tar.gz chdir={{ build }} creates={{ build }}/jpeg-6b
+      command: tar -zxf {{ build }}/jpegsrc.v6b.tar.gz chdir={{ build }} creates={{ build }}/jpeg-6b
+      environment: local_env
     - name: Configure libjpeg
       command: ./configure --prefix={{ base }} chdir={{ build }}/jpeg-6b creates={{ build }}/jpeg-6b/config.status
+      environment: local_env
     - name: Make libjpeg
-      command: make chdir={{ build }}/jpeg-6b
-    - name: Make directories
-      file: path={{ base }}/man/man1 state=directory mode=0755
+      command: make chdir={{ build }}/jpeg-6b creates={{build}}/jpeg-6b/cjpeg
+      environment: local_env
     - name: Install libjpeg
-      command: make install chdir={{ build }}/jpeg-6b
+      command: make install chdir={{ build }}/jpeg-6b creates={{base}}/bin/cjpeg
+      environment: local_env
+
+    - name: Get openjpeg
+      get_url:
+        dest: "{{ build }}/openjpeg-version.2.1.tar.gz"
+        url: https://github.com/uclouvain/openjpeg/archive/version.2.1.tar.gz
+    - name: Unpack openjpeg
+      command: tar -zxf {{ build }}/openjpeg-version.2.1.tar.gz chdir={{ build }} creates={{ build }}/openjpeg-version.2.1
+      environment: local_env
+    - name: Configure openjpeg
+      command: cmake . -DCMAKE_INSTALL_PREFIX={{ base }} chdir={{ build }}/openjpeg-version.2.1 creates={{ build }}/openjpeg-version.2.1/Makefile
+      environment: local_env
+    - name: Make openjpeg
+      command: make chdir={{ build }}/openjpeg-version.2.1 creates={{build}}/openjpeg-version.2.1/bin/libopenjp2.so
+      environment: local_env
+    - name: Install openjpeg
+      shell: env DESTDIR={{base}} make install chdir={{ build }}/openjpeg-version.2.1 creates={{base}}/lib/libopenjp2.so
+      environment: local_env
