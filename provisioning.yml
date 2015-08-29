@@ -10,6 +10,7 @@
   sudo: True
   vars:
     base: /usr/local
+    build: /tmp
   tasks:
 
     ## C and its friends
@@ -20,13 +21,28 @@
     ## cmake
     - name: Get cmake
       get_url:
-        dest: /tmp/cmake-3.3.1.tar.gz
+        dest: "{{ build }}/cmake-3.3.1.tar.gz"
         url: http://www.cmake.org/files/v3.3/cmake-3.3.1.tar.gz
     - name: Unpack cmake
-      command: tar -zxf /tmp/cmake-3.3.1.tar.gz chdir={{ base }} creates={{ base }}/cmake-3.3.1
+      command: tar -zxf {{ build }}/cmake-3.3.1.tar.gz chdir={{ build }} creates={{ build }}/cmake-3.3.1
     - name: Configure cmake
-      command: ./configure --prefix={{ base }} chdir={{ base }}/cmake-3.3.1
+      command: ./configure --prefix={{ base }} chdir={{ build }}/cmake-3.3.1 creates={{ build }}/cmake-3.3.1/CPackConfig.cmake
     - name: make cmake
-      command: make chdir={{ base }}/cmake-3.3.1
-    - name: install cmake
-      command: make install chdir={{ base }}/cmake-3.3.1
+      command: make chdir={{ build }}/cmake-3.3.1 creates={{ build }}/cmake-3.3.1/bin/cmake
+    - name: Install cmake
+      command: make install chdir={{ build }}/cmake-3.3.1 creates={{ base }}/bin/cmake
+
+    - name: Get libjpeg
+      get_url:
+        dest: "{{ build }}/jpegsrc.v6b.tar.gz"
+        url: http://sourceforge.net/projects/libjpeg/files/libjpeg/6b/jpegsrc.v6b.tar.gz/download
+    - name: Unpack libjpeg
+      command: tar -zxf /tmp/jpegsrc.v6b.tar.gz chdir={{ build }} creates={{ build }}/jpeg-6b
+    - name: Configure libjpeg
+      command: ./configure --prefix={{ base }} chdir={{ build }}/jpeg-6b creates={{ build }}/jpeg-6b/config.status
+    - name: Make libjpeg
+      command: make chdir={{ build }}/jpeg-6b
+    - name: Make directories
+      file: path={{ base }}/man/man1 state=directory mode=0755
+    - name: Install libjpeg
+      command: make install chdir={{ build }}/jpeg-6b
