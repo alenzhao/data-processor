@@ -8,11 +8,10 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = "morungos/centos67"
+  config.vm.box_url = "https://dl.dropboxusercontent.com/u/51478659/vagrant/morungos-centos67.box"
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
-
-  config.vm.synced_folder ".", "/vagrant", disabled: true
 
   # For VirtualBox, set RAM availability, and use two CPUs.
   config.vm.provider "virtualbox" do |v|
