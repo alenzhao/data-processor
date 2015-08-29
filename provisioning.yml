@@ -1,0 +1,32 @@
+---
+
+- hosts: all
+  sudo: True
+  tasks:
+    setup:
+      filter: '*'
+
+- hosts: all
+  sudo: True
+  vars:
+    base: /usr/local
+  tasks:
+
+    ## C and its friends
+    - name: Install required packages
+      yum:
+        name: autoconf,automake,gcc,gcc-c++
+
+    ## cmake
+    - name: Get cmake
+      get_url:
+        dest: /tmp/cmake-3.3.1.tar.gz
+        url: http://www.cmake.org/files/v3.3/cmake-3.3.1.tar.gz
+    - name: Unpack cmake
+      command: tar -zxf /tmp/cmake-3.3.1.tar.gz chdir={{ base }} creates={{ base }}/cmake-3.3.1
+    - name: Configure cmake
+      command: ./configure --prefix={{ base }} chdir={{ base }}/cmake-3.3.1
+    - name: make cmake
+      command: make chdir={{ base }}/cmake-3.3.1
+    - name: install cmake
+      command: make install chdir={{ base }}/cmake-3.3.1
