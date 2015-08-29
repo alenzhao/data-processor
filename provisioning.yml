@@ -29,7 +29,7 @@
     ## C and its friends
     - name: Install required packages
       yum:
-        name: autoconf,automake,gcc,gcc-c++
+        name: autoconf,automake,gcc,gcc-c++,git,libtool
 
     ## cmake
     - name: Get cmake
@@ -57,7 +57,7 @@
       command: tar -zxf {{ build }}/jpegsrc.v6b.tar.gz chdir={{ build }} creates={{ build }}/jpeg-6b
       environment: local_env
     - name: Configure libjpeg
-      command: ./configure --prefix={{ base }} chdir={{ build }}/jpeg-6b creates={{ build }}/jpeg-6b/config.status
+      command: ./configure --prefix={{ base }} --enable-shared chdir={{ build }}/jpeg-6b creates={{ build }}/jpeg-6b/config.status
       environment: local_env
     - name: Make libjpeg
       command: make chdir={{ build }}/jpeg-6b creates={{build}}/jpeg-6b/cjpeg
@@ -94,8 +94,24 @@
       command: ./configure --prefix={{ base }} chdir={{ build }}/tiff-4.0.4 creates={{ build }}/tiff-4.0.4/config.status
       environment: local_env
     - name: Make libtiff
-      command: make chdir={{ build }}/tiff-4.0.4
+      command: make chdir={{ build }}/tiff-4.0.4 creates={{ build }}/tiff-4.0.4/libtiff/libtiff.la
       environment: local_env
     - name: Install libtiff
-      shell: make install chdir={{ build }}/tiff-4.0.4
+      shell: make install chdir={{ build }}/tiff-4.0.4 creates={{ base }}/lib/libtiff.la
+      environment: local_env
+
+    ## Openslide
+    - name: Get openslide
+      git:
+        dest: "{{ build }}/openslide"
+        repo: "https://github.com/openslide/openslide.git"
+      environment: local_env
+    - name: Configure openslide
+      command: libtoolize chdir={{ build }}/openslide creates={{ build }}/openslide/m4/libtool.m4
+      environment: local_env
+    - name: Configure openslide
+      command: autoreconf -i chdir={{ build }}/openslide creates={{ build }}/openslide/configure
+      environment: local_env
+    - name: Configure openslide
+      command: env PKG_CONFIG_PATH={{ base }}/lib/pkgconfig ./configure --prefix={{ base }} chdir={{ build }}/openslide creates={{ build }}/openslide/config.status
       environment: local_env
