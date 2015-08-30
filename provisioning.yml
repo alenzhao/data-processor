@@ -14,6 +14,7 @@
     local_env:
       PATH: "/home/vagrant/local/bin:{{ansible_env.PATH}}"
       CFLAGS: "-I{{base}}/include"
+      CPPFLAGS: "-I{{base}}/include"
       LDFLAGS: "-L{{base}}/lib"
       PKG_CONFIG_PATH: "{{ base }}/lib/pkgconfig"
 
@@ -170,16 +171,73 @@
         dest: "{{ build }}/glib-2.44.1.tar.xz"
         url: ftp://ftp.gnome.org/pub/gnome/sources/glib/2.44/glib-2.44.1.tar.xz
     - name: Unpack glib
-      shell: "xz -d -c {{ build }}/glib-2.44.1.tar.xz | tar xf - chdir={{build}}"
+      shell: "xz -d -c {{ build }}/glib-2.44.1.tar.xz | tar xf - chdir={{build}} creates={{ build }}/glib-2.44.1"
       environment: local_env
     - name: Configure glib
-      command: ./configure --prefix={{ base }} chdir={{ build }}/glib-2.44.1
+      command: ./configure --prefix={{ base }} chdir={{ build }}/glib-2.44.1 creates={{ build }}/glib-2.44.1/Makefile
       environment: local_env
     - name: Make glib
-      command: make chdir={{ build }}/glib-2.44.1
+      command: make chdir={{ build }}/glib-2.44.1 creates={{ build }}/glib-2.44.1/glib/libglib-2.0.la
       environment: local_env
     - name: Install glib
-      shell: make install chdir={{ build }}/glib-2.44.1
+      shell: make install chdir={{ build }}/glib-2.44.1 creates={{base}}/lib/libglib-2.0.la
+      environment: local_env
+
+
+    ## libpng - http://sourceforge.net/projects/libpng/files/libpng16/1.6.18/libpng-1.6.18.tar.gz/download
+    - name: Get libpng
+      get_url:
+        dest: "{{ build }}/libpng-1.6.18.tar.gz"
+        url: http://sourceforge.net/projects/libpng/files/libpng16/1.6.18/libpng-1.6.18.tar.gz/download
+    - name: Unpack libpng
+      command: tar -zxf {{ build }}/libpng-1.6.18.tar.gz chdir={{ build }} creates={{ build }}/libpng-1.6.18
+      environment: local_env
+    - name: Configure libpng
+      command: ./configure --prefix={{ base }} chdir={{ build }}/libpng-1.6.18 creates={{ build }}/libpng-1.6.18/Makefile
+      environment: local_env
+    - name: Make libpng
+      command: make chdir={{ build }}/libpng-1.6.18 creates={{ build }}/libpng-1.6.18/.libs/libpng16.a
+      environment: local_env
+    - name: Install libpng
+      shell: make install chdir={{ build }}/libpng-1.6.18 creates={{base}}/lib/libpng16.a
+      environment: local_env
+
+
+    ## pixman - http://cairographics.org/releases/pixman-0.32.6.tar.gz
+    - name: Get pixman
+      get_url:
+        dest: "{{ build }}/pixman-0.32.6.tar.gz"
+        url: http://cairographics.org/releases/pixman-0.32.6.tar.gz
+    - name: Unpack pixman
+      command: tar -zxf {{ build }}/pixman-0.32.6.tar.gz chdir={{ build }} creates={{ build }}/pixman-0.32.6
+      environment: local_env
+    - name: Configure pixman
+      command: ./configure --prefix={{ base }} chdir={{ build }}/pixman-0.32.6 creates={{ build }}/pixman-0.32.6/Makefile
+      environment: local_env
+    - name: Make pixman
+      command: make chdir={{ build }}/pixman-0.32.6 creates={{ build }}/pixman-0.32.6/pixman/.libs/libpixman-1.a
+      environment: local_env
+    - name: Install pixman
+      shell: make install chdir={{ build }}/pixman-0.32.6 creates={{base}}/lib/libpixman-1.a
+      environment: local_env
+
+
+    ## cairo - http://cairographics.org/releases/cairo-1.14.2.tar.xz
+    - name: Get cairo
+      get_url:
+        dest: "{{ build }}/cairo-1.14.2.tar.xz"
+        url: http://cairographics.org/releases/cairo-1.14.2.tar.xz
+    - name: Unpack cairo
+      shell: "xz -d -c {{ build }}/cairo-1.14.2.tar.xz | tar xf - chdir={{build}} creates={{ build }}/cairo-1.14.2"
+      environment: local_env
+    - name: Configure cairo
+      command: ./configure --prefix={{ base }} chdir={{ build }}/cairo-1.14.2 creates={{ build }}/cairo-1.14.2/Makefile
+      environment: local_env
+    - name: Make cairo
+      command: make chdir={{ build }}/cairo-1.14.2 creates={{ build }}/cairo-1.14.2/src/.libs/libcairo.la
+      environment: local_env
+    - name: Install cairo
+      shell: make install chdir={{ build }}/cairo-1.14.2 creates={{base}}/lib/libcairo.la
       environment: local_env
 
 
