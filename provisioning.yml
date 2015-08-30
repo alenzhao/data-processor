@@ -13,6 +13,10 @@
     build: /home/vagrant/scratch
     local_env:
       PATH: "/home/vagrant/local/bin:{{ansible_env.PATH}}"
+      CFLAGS: "-I{{base}}/include"
+      LDFLAGS: "-L{{base}}/lib"
+      PKG_CONFIG_PATH: "{{ base }}/lib/pkgconfig"
+
   tasks:
 
     ## Directories
@@ -31,7 +35,7 @@
     ## C and its friends
     - name: Install required packages
       yum:
-        name: autoconf,automake,gcc,gcc-c++,git,libtool
+        name: autoconf,automake,gcc,gcc-c++,git,libtool,libselinux-python
 
     ## cmake
     - name: Get cmake
@@ -106,6 +110,24 @@
       shell: make install chdir={{ build }}/tiff-4.0.4 creates={{ base }}/lib/libtiff.la
       environment: local_env
 
+    ## zlib - http://zlib.net/zlib-1.2.8.tar.gz
+    - name: Get zlib
+      get_url:
+        dest: "{{ build }}/zlib-1.2.8.tar.gz"
+        url: "http://zlib.net/zlib-1.2.8.tar.gz"
+    - name: Unpack zlib
+      command: tar -zxf {{ build }}/zlib-1.2.8.tar.gz chdir={{ build }} creates={{ build }}/zlib-1.2.8
+      environment: local_env
+    - name: Configure zlib
+      command: ./configure --prefix={{ base }} chdir={{ build }}/zlib-1.2.8 creates={{ build }}/zlib-1.2.8/zconf.h
+      environment: local_env
+    - name: Make zlib
+      command: make chdir={{ build }}/zlib-1.2.8 creates={{ build }}/zlib-1.2.8/libz.a
+      environment: local_env
+    - name: Install zlib
+      shell: make install chdir={{ build }}/zlib-1.2.8 creates={{ base }}/lib/libz.a
+      environment: local_env
+
     ## Openslide
     - name: Get openslide
       git:
@@ -119,5 +141,5 @@
       command: autoreconf -i chdir={{ build }}/openslide creates={{ build }}/openslide/configure
       environment: local_env
     - name: Configure openslide
-      command: env PKG_CONFIG_PATH={{ base }}/lib/pkgconfig ./configure --prefix={{ base }} chdir={{ build }}/openslide creates={{ build }}/openslide/config.status
+      command: ./configure --prefix={{ base }} chdir={{ build }}/openslide creates={{ build }}/openslide/config.status
       environment: local_env
