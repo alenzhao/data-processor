@@ -146,6 +146,24 @@
       shell: make install chdir={{ build }}/libffi-3.2.1 creates={{base}}/lib/libffi.a
       environment: local_env
 
+    ## gettext
+    - name: Get gettext
+      get_url:
+        dest: "{{ build }}/gettext-0.19.tar.gz"
+        url: http://ftp.gnu.org/pub/gnu/gettext/gettext-0.19.tar.gz
+    - name: Unpack gettext
+      command: tar -zxf {{ build }}/gettext-0.19.tar.gz chdir={{ build }} creates={{ build }}/gettext-0.19
+      environment: local_env
+    - name: Configure gettext
+      command: ./configure --prefix={{ base }} chdir={{ build }}/gettext-0.19 creates={{ build }}/gettext-0.19/Makefile
+      environment: local_env
+    - name: Make gettext
+      command: make chdir={{ build }}/gettext-0.19 creates={{ build }}/gettext-0.19/gettext-tools/libgettextpo/libgettextpo.la
+      environment: local_env
+    - name: Install gettext
+      shell: make install chdir={{ build }}/gettext-0.19 creates={{base}}/lib/libgettextpo.a
+      environment: local_env
+
     ## glib - ftp://ftp.gnome.org/pub/gnome/sources/glib/2.44/glib-2.44.1.tar.xz
     - name: Get glib
       get_url:
