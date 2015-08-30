@@ -35,7 +35,7 @@
     ## C and its friends
     - name: Install required packages
       yum:
-        name: autoconf,automake,gcc,gcc-c++,git,libtool,libselinux-python
+        name: autoconf,automake,gcc,gcc-c++,git,libtool,libselinux-python,xz
 
     ## cmake
     - name: Get cmake
@@ -127,6 +127,43 @@
     - name: Install zlib
       shell: make install chdir={{ build }}/zlib-1.2.8 creates={{ base }}/lib/libz.a
       environment: local_env
+
+    ## ffi - ftp://sourceware.org/pub/libffi/libffi-3.2.1.tar.gz
+    - name: Get libffi
+      get_url:
+        dest: "{{ build }}/libffi-3.2.1.tar.gz"
+        url: ftp://sourceware.org/pub/libffi/libffi-3.2.1.tar.gz
+    - name: Unpack libffi
+      command: tar -zxf {{ build }}/libffi-3.2.1.tar.gz chdir={{ build }} creates={{ build }}/libffi-3.2.1
+      environment: local_env
+    - name: Configure libffi
+      command: ./configure --prefix={{ base }} chdir={{ build }}/libffi-3.2.1 creates={{ build }}/libffi-3.2.1/Makefile
+      environment: local_env
+    - name: Make libffi
+      command: make chdir={{ build }}/libffi-3.2.1 creates={{build}}/libffi-3.2.1/i686-pc-linux-gnu/libffi.la
+      environment: local_env
+    - name: Install libffi
+      shell: make install chdir={{ build }}/libffi-3.2.1 creates={{base}}/lib/libffi.a
+      environment: local_env
+
+    ## glib - ftp://ftp.gnome.org/pub/gnome/sources/glib/2.44/glib-2.44.1.tar.xz
+    - name: Get glib
+      get_url:
+        dest: "{{ build }}/glib-2.44.1.tar.xz"
+        url: ftp://ftp.gnome.org/pub/gnome/sources/glib/2.44/glib-2.44.1.tar.xz
+    - name: Unpack glib
+      shell: "xz -d -c {{ build }}/glib-2.44.1.tar.xz | tar xf - chdir={{build}}"
+      environment: local_env
+    - name: Configure glib
+      command: ./configure --prefix={{ base }} chdir={{ build }}/glib-2.44.1
+      environment: local_env
+    - name: Make glib
+      command: make chdir={{ build }}/glib-2.44.1
+      environment: local_env
+    - name: Install glib
+      shell: make install chdir={{ build }}/glib-2.44.1
+      environment: local_env
+
 
     ## Openslide
     - name: Get openslide
