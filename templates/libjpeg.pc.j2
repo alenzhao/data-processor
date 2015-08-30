@@ -1,0 +1,10 @@
+prefix={{ base }}
+exec_prefix=${prefix}/bin
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libjpeg
+Version: 6b
+Description: libjpeg
+Cflags: -I${includedir}
+Libs: -L${libdir} -libjpeg

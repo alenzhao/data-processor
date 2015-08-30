@@ -25,6 +25,8 @@
         - "{{ base }}"
         - "{{ build }}"
         - "{{ base }}/man/man1"
+        - "{{ base }}/lib"
+        - "{{ base }}/include"
 
     ## C and its friends
     - name: Install required packages
@@ -65,6 +67,10 @@
     - name: Install libjpeg
       command: make install chdir={{ build }}/jpeg-6b creates={{base}}/bin/cjpeg
       environment: local_env
+    - name: Install pkg-config file
+      template:
+        src: "./templates/libjpeg.pc.j2"
+        dest: "{{ base }}/lib/pkgconfig/libjpeg.pc"
 
     - name: Get openjpeg
       get_url:
