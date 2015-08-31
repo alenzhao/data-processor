@@ -270,13 +270,32 @@
       command: tar -zxf {{ build }}/libxml2-2.9.2.tar.gz chdir={{ build }} creates={{ build }}/libxml2-2.9.2
       environment: local_env
     - name: Configure libxml2
-      command: ./configure --prefix={{ base }} chdir={{ build }}/libxml2-2.9.2 creates={{ build }}/libxml2-2.9.2/Makefile
+      command: ./configure --prefix={{ base }} --without-zlib --without-python chdir={{ build }}/libxml2-2.9.2 creates={{ build }}/libxml2-2.9.2/Makefile
       environment: local_env
     - name: Make libxml2
       command: make chdir={{ build }}/libxml2-2.9.2 creates={{ build }}/libxml2-2.9.2/libxml2.la
       environment: local_env
     - name: Install libxml2
       shell: make install chdir={{ build }}/libxml2-2.9.2 creates={{base}}/lib/libxml2.la
+      environment: local_env
+
+
+    ## sqlite - https://www.sqlite.org/2015/sqlite-autoconf-3081101.tar.gz
+    - name: Get sqlite
+      get_url:
+        dest: "{{ build }}/sqlite-autoconf-3081101.tar.gz"
+        url: https://www.sqlite.org/2015/sqlite-autoconf-3081101.tar.gz
+    - name: Unpack sqlite
+      command: tar -zxf {{ build }}/sqlite-autoconf-3081101.tar.gz chdir={{ build }} creates={{ build }}/sqlite-autoconf-3081101
+      environment: local_env
+    - name: Configure sqlite
+      command: ./configure --prefix={{ base }} chdir={{ build }}/sqlite-autoconf-3081101 creates={{ build }}/sqlite-autoconf-3081101/Makefile
+      environment: local_env
+    - name: Make sqlite
+      command: make chdir={{ build }}/sqlite-autoconf-3081101 creates={{ build }}/sqlite-autoconf-3081101/libsqlite3.la
+      environment: local_env
+    - name: Install sqlite
+      shell: make install chdir={{ build }}/sqlite-autoconf-3081101 creates={{base}}/lib/libsqlite3.la
       environment: local_env
 
 
@@ -293,5 +312,11 @@
       command: autoreconf -i chdir={{ build }}/openslide creates={{ build }}/openslide/configure
       environment: local_env
     - name: Configure openslide
-      command: ./configure --prefix={{ base }} chdir={{ build }}/openslide creates={{ build }}/openslide/config.status
+      command: ./configure --prefix={{ base }} chdir={{ build }}/openslide creates={{ build }}/openslide/Makefile
+      environment: local_env
+    - name: Make openslide
+      command: make chdir={{ build }}/openslide creates={{ build }}/openslide/src/.libs/libopenslide.la
+      environment: local_env
+    - name: Install openslide
+      command: make install chdir={{ build }}/openslide creates={{ base }}/lib/libopenslide.la
       environment: local_env
