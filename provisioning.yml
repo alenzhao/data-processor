@@ -32,6 +32,7 @@
         - "{{ build }}"
         - "{{ base }}/man/man1"
         - "{{ base }}/lib"
+        - "{{ base }}/lib/pkgconfig"
         - "{{ base }}/include"
 
     ## C and its friends
@@ -57,26 +58,29 @@
       command: make install chdir={{ build }}/cmake-3.3.1 creates={{ base }}/bin/cmake
       environment: local_env
 
+
+    ## http://www.ijg.org/files/jpegsrc.v9a.tar.gz
     - name: Get libjpeg
       get_url:
-        dest: "{{ build }}/jpegsrc.v6b.tar.gz"
-        url: http://sourceforge.net/projects/libjpeg/files/libjpeg/6b/jpegsrc.v6b.tar.gz/download
+        dest: "{{ build }}/jpegsrc.v9a.tar.gz"
+        url: http://www.ijg.org/files/jpegsrc.v9a.tar.gz
     - name: Unpack libjpeg
-      command: tar -zxf {{ build }}/jpegsrc.v6b.tar.gz chdir={{ build }} creates={{ build }}/jpeg-6b
+      command: tar -zxf {{ build }}/jpegsrc.v9a.tar.gz chdir={{ build }} creates={{ build }}/jpeg-9a
       environment: local_env
     - name: Configure libjpeg
-      command: ./configure --prefix={{ base }} --enable-shared chdir={{ build }}/jpeg-6b creates={{ build }}/jpeg-6b/config.status
+      command: ./configure --prefix={{ base }} --enable-shared chdir={{ build }}/jpeg-9a creates={{ build }}/jpeg-9a/config.status
       environment: local_env
     - name: Make libjpeg
-      command: make chdir={{ build }}/jpeg-6b creates={{build}}/jpeg-6b/cjpeg
+      command: make chdir={{ build }}/jpeg-9a creates={{build}}/jpeg-9a/.libs/libjpeg.a
       environment: local_env
     - name: Install libjpeg
-      command: make install chdir={{ build }}/jpeg-6b creates={{base}}/bin/cjpeg
+      command: make install chdir={{ build }}/jpeg-9a creates={{base}}/lib/libjpeg.a
       environment: local_env
     - name: Install pkg-config file
       template:
         src: "./templates/libjpeg.pc.j2"
         dest: "{{ base }}/lib/pkgconfig/libjpeg.pc"
+
 
     - name: Get openjpeg
       get_url:
@@ -92,9 +96,29 @@
       command: make chdir={{ build }}/openjpeg-version.2.1 creates={{build}}/openjpeg-version.2.1/bin/libopenjp2.so
       environment: local_env
     - name: Install openjpeg
-      shell: env DESTDIR={{base}} make install chdir={{ build }}/openjpeg-version.2.1 creates={{base}}/lib/libopenjp2.so
+      shell: make install chdir={{ build }}/openjpeg-version.2.1 creates={{base}}/lib/libopenjp2.so
       environment: local_env
 
+    ## zlib - http://zlib.net/zlib-1.2.8.tar.gz
+    - name: Get zlib
+      get_url:
+        dest: "{{ build }}/zlib-1.2.8.tar.gz"
+        url: "http://zlib.net/zlib-1.2.8.tar.gz"
+    - name: Unpack zlib
+      command: tar -zxf {{ build }}/zlib-1.2.8.tar.gz chdir={{ build }} creates={{ build }}/zlib-1.2.8
+      environment: local_env
+    - name: Configure zlib
+      command: ./configure --prefix={{ base }} chdir={{ build }}/zlib-1.2.8 creates={{ build }}/zlib-1.2.8/zlib.pc
+      environment: local_env
+    - name: Make zlib
+      command: make chdir={{ build }}/zlib-1.2.8 creates={{ build }}/zlib-1.2.8/libz.a
+      environment: local_env
+    - name: Install zlib
+      shell: make install chdir={{ build }}/zlib-1.2.8 creates={{ base }}/lib/libz.a
+      environment: local_env
+
+
+    ## libtiff
     - name: Get libtiff
       get_url:
         dest: "{{ build }}/tiff-4.0.4.tar.gz"
@@ -112,23 +136,6 @@
       shell: make install chdir={{ build }}/tiff-4.0.4 creates={{ base }}/lib/libtiff.la
       environment: local_env
 
-    ## zlib - http://zlib.net/zlib-1.2.8.tar.gz
-    - name: Get zlib
-      get_url:
-        dest: "{{ build }}/zlib-1.2.8.tar.gz"
-        url: "http://zlib.net/zlib-1.2.8.tar.gz"
-    - name: Unpack zlib
-      command: tar -zxf {{ build }}/zlib-1.2.8.tar.gz chdir={{ build }} creates={{ build }}/zlib-1.2.8
-      environment: local_env
-    - name: Configure zlib
-      command: ./configure --prefix={{ base }} chdir={{ build }}/zlib-1.2.8 creates={{ build }}/zlib-1.2.8/zconf.h
-      environment: local_env
-    - name: Make zlib
-      command: make chdir={{ build }}/zlib-1.2.8 creates={{ build }}/zlib-1.2.8/libz.a
-      environment: local_env
-    - name: Install zlib
-      shell: make install chdir={{ build }}/zlib-1.2.8 creates={{ base }}/lib/libz.a
-      environment: local_env
 
     ## ffi - ftp://sourceware.org/pub/libffi/libffi-3.2.1.tar.gz
     - name: Get libffi
@@ -147,6 +154,7 @@
     - name: Install libffi
       shell: make install chdir={{ build }}/libffi-3.2.1 creates={{base}}/lib/libffi.a
       environment: local_env
+
 
     ## gettext
     - name: Get gettext
@@ -312,7 +320,7 @@
       command: autoreconf -i chdir={{ build }}/openslide creates={{ build }}/openslide/configure
       environment: local_env
     - name: Configure openslide
-      command: ./configure --prefix={{ base }} chdir={{ build }}/openslide creates={{ build }}/openslide/Makefile
+      command: ./configure --prefix={{ base }} --with-jpeg12-include-dir={{base}}/include --with-jpeg12-lib-dir={{base}}/lib --with-zlib-include-dir={{base}}/include --with-zlib-lib-dir={{base}}/lib chdir={{ build }}/openslide creates={{ build }}/openslide/Makefile
       environment: local_env
     - name: Make openslide
       command: make chdir={{ build }}/openslide creates={{ build }}/openslide/src/.libs/libopenslide.la
@@ -320,3 +328,10 @@
     - name: Install openslide
       command: make install chdir={{ build }}/openslide creates={{ base }}/lib/libopenslide.la
       environment: local_env
+
+
+    ## Testing
+    - name: Download a sample file
+      get_url:
+        dest: "{{ build }}/CMU-1.svs"
+        url: http://openslide.cs.cmu.edu/download/openslide-testdata/Aperio/CMU-1.svs
