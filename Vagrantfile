@@ -17,7 +17,7 @@ Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |v|
     v.memory = 1024
     v.cpus = 2
-    v.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
+    v.customize ["modifyvm", :id, "--nictype1", "Am79C973", "--ioapic", "on"]
   end
 
   config.vm.provision "ansible" do |ansible|
